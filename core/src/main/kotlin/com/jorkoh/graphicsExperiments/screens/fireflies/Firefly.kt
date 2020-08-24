@@ -7,35 +7,33 @@ import com.badlogic.gdx.math.Vector2
 import kotlin.random.Random
 
 class Firefly(
-        var x: Float,
-        var y: Float
+        var position: Vector2
 ) {
     companion object {
-        const val DEFAULT_RADIUS = 7.5f
+        const val BODY_RADIUS = 7.5f
         const val CYCLE_LENGTH = 16
-        const val PERCEPTION_RADIUS = 80f
+        const val PERCEPTION_RADIUS_SQUARED = 6400f
         val PERCEPTION_COLOR = Color(0x181818ff)
     }
 
-    private val radius = DEFAULT_RADIUS
     private var cyclePosition = Random.nextInt(CYCLE_LENGTH)
     var isOn = cyclePosition == 0
 
     fun update() {
         // Movement
         val xPositive = when {
-            x - radius <= 0 -> true
-            x + radius >= Gdx.graphics.width -> false
+            position.x - BODY_RADIUS <= 0 -> true
+            position.x + BODY_RADIUS >= Gdx.graphics.width -> false
             else -> Random.nextBoolean()
         }
         val yPositive = when {
-            y - radius <= 0 -> true
-            y + radius >= Gdx.graphics.height -> false
+            position.y - BODY_RADIUS <= 0 -> true
+            position.y + BODY_RADIUS >= Gdx.graphics.height -> false
             else -> Random.nextBoolean()
         }
 
-        x += Random.nextFloat() * 15f * if (xPositive) 1 else -1
-        y += Random.nextFloat() * 15f * if (yPositive) 1 else -1
+        position.x += Random.nextFloat() * 15f * if (xPositive) 1 else -1
+        position.y += Random.nextFloat() * 15f * if (yPositive) 1 else -1
 
         // Cycle
         cyclePosition = (cyclePosition + 1) % CYCLE_LENGTH
@@ -43,22 +41,29 @@ class Firefly(
     }
 
     fun lookAt(fireflies: List<Firefly>) {
-        if (!isOn && fireflies.filter { firefly -> firefly != this && Vector2.dst(x, y, firefly.x, firefly.y) <= PERCEPTION_RADIUS }.any { it.isOn }) {
+        if (!isOn && fireflies.getNearbyFireflies(this).any { it.isOn }) {
             cyclePosition = 0
         }
     }
 
+    private fun List<Firefly>.getNearbyFireflies(firefly: Firefly) = this.filter { otherFirefly ->
+        otherFirefly != firefly && Vector2.dst2(
+                firefly.position.x, firefly.position.y,
+                otherFirefly.position.x, otherFirefly.position.y
+        ) <= PERCEPTION_RADIUS_SQUARED
+    }
+
     fun draw(shapeRenderer: ShapeRenderer) {
         shapeRenderer.color = if (isOn) Color.YELLOW else Color.DARK_GRAY
-        shapeRenderer.circle(x, y, radius)
+        shapeRenderer.circle(position.x, position.y, BODY_RADIUS)
     }
 
     fun drawPerception(shapeRenderer: ShapeRenderer) {
         shapeRenderer.color = PERCEPTION_COLOR
-        shapeRenderer.circle(x, y, PERCEPTION_RADIUS)
+        shapeRenderer.circle(position.x, position.y, PERCEPTION_RADIUS_SQUARED)
     }
 
-    fun randomizeCycle(){
+    fun randomizeCycle() {
         cyclePosition = Random.nextInt(CYCLE_LENGTH)
     }
 }

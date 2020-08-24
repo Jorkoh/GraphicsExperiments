@@ -9,11 +9,12 @@ import com.jorkoh.graphicsExperiments.screens.MainMenuScreen
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
 import ktx.graphics.use
+import ktx.math.vec2
 import kotlin.random.Random
 
 class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
     companion object {
-        const val CHAOS_RADIUS = 80f
+        const val CHAOS_RADIUS_SQUARED = 6400f
     }
 
     private val fireflies = mutableListOf<Firefly>()
@@ -47,15 +48,15 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
 
         // Add fireflies
         repeat(200) {
-            fireflies.add(Firefly(
-                    Random.nextFloat() * (Gdx.graphics.width - Firefly.DEFAULT_RADIUS * 2) + Firefly.DEFAULT_RADIUS,
-                    Random.nextFloat() * (Gdx.graphics.height - Firefly.DEFAULT_RADIUS * 2) + Firefly.DEFAULT_RADIUS
-            ))
+            fireflies.add(Firefly(vec2(
+                    Random.nextFloat() * (Gdx.graphics.width - Firefly.BODY_RADIUS * 2) + Firefly.BODY_RADIUS,
+                    Random.nextFloat() * (Gdx.graphics.height - Firefly.BODY_RADIUS * 2) + Firefly.BODY_RADIUS
+            )))
         }
     }
 
     private fun randomizeFirefliesCycleAtPosition(x: Float, y: Float) {
-        fireflies.filter { firefly -> Vector2.dst(x, y, firefly.x, firefly.y) <= CHAOS_RADIUS }
+        fireflies.filter { firefly -> vec2(x, y).dst2(firefly.position) <= CHAOS_RADIUS_SQUARED }
                 .forEach { it.randomizeCycle() }
     }
 
