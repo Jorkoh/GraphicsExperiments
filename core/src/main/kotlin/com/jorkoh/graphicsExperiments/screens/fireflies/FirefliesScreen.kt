@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.jorkoh.graphicsExperiments.GraphicsExperiments
-import com.jorkoh.graphicsExperiments.screens.MainMenuScreen
+import com.jorkoh.graphicsExperiments.screens.SelectionScreen
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
 import ktx.graphics.use
@@ -30,8 +30,8 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
             override fun keyDown(keycode: Int): Boolean {
                 return when (keycode) {
                     Input.Keys.ESCAPE -> {
-                        main.addScreen(MainMenuScreen(main))
-                        main.setScreen<MainMenuScreen>()
+                        main.addScreen(SelectionScreen(main))
+                        main.setScreen<SelectionScreen>()
                         main.removeScreen<FirefliesScreen>()
                         dispose()
                         true
@@ -68,6 +68,7 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     override fun render(delta: Float) {
+//        println("FPS: ${1/delta}")
         fireflies.forEach { firefly -> firefly.updateMovement(delta) }
 
         accumulator += delta

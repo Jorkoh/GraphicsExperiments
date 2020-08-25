@@ -18,7 +18,7 @@ class Firefly(
 
         const val CYCLE_LENGTH = 16
 
-        const val SPEED = 40f
+        const val SPEED = 50f
         const val TURNING_ANGLE = 6
 
         const val PERCEPTION_RADIUS = 80f
@@ -40,7 +40,7 @@ class Firefly(
             else -> velocity
         }
         // Update turning direction
-        val randomTurning = Random.nextInt(40)
+        val randomTurning = Random.nextInt(50)
         turningDirection = when (randomTurning) {
             0 -> -1
             in 1..2 -> 0

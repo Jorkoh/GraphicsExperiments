@@ -3,18 +3,19 @@ package com.jorkoh.graphicsExperiments;
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.jorkoh.graphicsExperiments.screens.MainMenuScreen
+import com.jorkoh.graphicsExperiments.screens.SelectionScreen
 import ktx.app.KtxGame;
 import ktx.app.KtxScreen;
 
 class GraphicsExperiments : KtxGame<KtxScreen>() {
     val batch by lazy { SpriteBatch() }
     val shapeRenderer by lazy { ShapeRenderer() }
+    // TODO avoid font pixelation
     val font by lazy { BitmapFont().apply { data.scale(2f) } }
 
     override fun create() {
-        addScreen(MainMenuScreen(this))
-        setScreen<MainMenuScreen>()
+        addScreen(SelectionScreen(this))
+        setScreen<SelectionScreen>()
         super.create()
     }
 }
