@@ -12,6 +12,13 @@ import ktx.graphics.use
 
 class SelectionScreen(private val main: GraphicsExperiments) : KtxScreen {
 
+    companion object {
+        const val SELECTION_TEXT = """
+            |[1] Fireflies syncing
+            |[2] Boids
+        """
+    }
+
     override fun show() {
         Gdx.input.inputProcessor = object : KtxInputAdapter {
             override fun keyDown(keycode: Int): Boolean {
@@ -42,15 +49,11 @@ class SelectionScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        val text = GlyphLayout(main.font, """
-            |[1] Fireflies syncing
-            |[2] Boids
-        """.trimMargin())
+        clearScreen()
+        val text = GlyphLayout(main.font, SELECTION_TEXT.trimMargin())
 
         main.batch.use { batch ->
-            main.font.draw(batch, text,
-                    Gdx.graphics.width / 2f - text.width / 2f,
-                    Gdx.graphics.height / 2f + text.height / 2f)
+            main.font.draw(batch, text, Gdx.graphics.width / 2f - text.width / 2f, Gdx.graphics.height / 2f + text.height / 2f)
         }
     }
 
