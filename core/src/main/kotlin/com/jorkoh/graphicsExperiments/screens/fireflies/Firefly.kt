@@ -15,12 +15,9 @@ class Firefly(
 ) {
     companion object {
         const val BODY_RADIUS = 6f
-
         const val CYCLE_LENGTH = 16
-
         const val SPEED = 50f
         const val TURNING_ANGLE = 6
-
         const val PERCEPTION_RADIUS = 80f
         const val PERCEPTION_RADIUS_SQUARED = 6400f
     }

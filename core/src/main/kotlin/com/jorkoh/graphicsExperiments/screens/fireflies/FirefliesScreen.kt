@@ -66,6 +66,16 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
         renderFireflies()
     }
 
+    override fun hide() {
+        fireflies.clear()
+        Gdx.input.inputProcessor = null
+    }
+
+    private fun randomizeFirefliesCycleAtPosition(x: Float, y: Float) {
+        fireflies.filter { firefly -> vec2(x, y).dst2(firefly.position) <= RANDOMIZE_RADIUS_SQUARED }
+                .forEach { it.randomizeCycle() }
+    }
+
     private fun addFireflies() {
         repeat(300) {
             val position = vec2(
@@ -75,11 +85,6 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
             val velocity = vec2().setToRandomDirection() * Firefly.SPEED
             fireflies.add(Firefly(position, velocity))
         }
-    }
-
-    private fun randomizeFirefliesCycleAtPosition(x: Float, y: Float) {
-        fireflies.filter { firefly -> vec2(x, y).dst2(firefly.position) <= RANDOMIZE_RADIUS_SQUARED }
-                .forEach { it.randomizeCycle() }
     }
 
     private fun updateFireflies(delta: Float) {
@@ -109,10 +114,5 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
                 }
             }
         }
-    }
-
-    override fun hide() {
-        fireflies.clear()
-        Gdx.input.inputProcessor = null
     }
 }
