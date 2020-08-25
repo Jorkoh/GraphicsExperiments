@@ -7,6 +7,7 @@ import com.jorkoh.graphicsExperiments.GraphicsExperiments
 import com.jorkoh.graphicsExperiments.screens.fireflies.FirefliesScreen
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
+import ktx.graphics.use
 
 class MainMenuScreen(private val main: GraphicsExperiments) : KtxScreen {
 
@@ -35,11 +36,11 @@ class MainMenuScreen(private val main: GraphicsExperiments) : KtxScreen {
     override fun render(delta: Float) {
         val text = GlyphLayout(main.font, "F1 for fireflies")
 
-        main.batch.begin()
-        main.font.draw(main.batch, text,
-                Gdx.graphics.width / 2f - text.width / 2f,
-                Gdx.graphics.height / 2f + text.height / 2f)
-        main.batch.end()
+        main.batch.use { batch ->
+            main.font.draw(batch, text,
+                    Gdx.graphics.width / 2f - text.width / 2f,
+                    Gdx.graphics.height / 2f + text.height / 2f)
+        }
     }
 
     override fun hide() {

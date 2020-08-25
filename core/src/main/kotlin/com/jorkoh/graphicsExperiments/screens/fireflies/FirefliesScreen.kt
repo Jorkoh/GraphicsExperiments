@@ -3,12 +3,12 @@ package com.jorkoh.graphicsExperiments.screens.fireflies
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
-import com.badlogic.gdx.math.Vector2
 import com.jorkoh.graphicsExperiments.GraphicsExperiments
 import com.jorkoh.graphicsExperiments.screens.MainMenuScreen
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
 import ktx.graphics.use
+import ktx.math.times
 import ktx.math.vec2
 import kotlin.random.Random
 
@@ -47,11 +47,13 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
         }
 
         // Add fireflies
-        repeat(200) {
-            fireflies.add(Firefly(vec2(
+        repeat(300) {
+            val position = vec2(
                     Random.nextFloat() * (Gdx.graphics.width - Firefly.BODY_RADIUS * 2) + Firefly.BODY_RADIUS,
                     Random.nextFloat() * (Gdx.graphics.height - Firefly.BODY_RADIUS * 2) + Firefly.BODY_RADIUS
-            )))
+            )
+            val velocity = vec2().setToRandomDirection() * Firefly.SPEED
+            fireflies.add(Firefly(position, velocity))
         }
     }
 
@@ -64,9 +66,9 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
         accumulator += delta
         if (accumulator >= 0.06f) {
             // The fireflies don't update on every render cycle
-            accumulator -= 0.06f
-            fireflies.forEach { firefly -> firefly.update() }
+            fireflies.forEach { firefly -> firefly.update(accumulator) }
             fireflies.forEach { firefly -> firefly.lookAt(fireflies) }
+            accumulator -= 0.06f
         }
 
         main.shapeRenderer.use(ShapeRenderer.ShapeType.Filled) { renderer ->

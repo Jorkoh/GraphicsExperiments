@@ -4,53 +4,65 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector2
+import ktx.math.plusAssign
+import ktx.math.times
+import ktx.math.vec2
 import kotlin.random.Random
 
 class Firefly(
-        var position: Vector2
+        var position: Vector2,
+        var velocity: Vector2
 ) {
     companion object {
         const val BODY_RADIUS = 7.5f
+
         const val CYCLE_LENGTH = 16
+
+        const val SPEED = 40f
+        const val TURNING_ANGLE = 10
+
         const val PERCEPTION_RADIUS_SQUARED = 6400f
         val PERCEPTION_COLOR = Color(0x181818ff)
     }
 
+    private var turningDirection = 0
+
     private var cyclePosition = Random.nextInt(CYCLE_LENGTH)
     var isOn = cyclePosition == 0
 
-    fun update() {
-        // Movement
-        val xPositive = when {
-            position.x - BODY_RADIUS <= 0 -> true
-            position.x + BODY_RADIUS >= Gdx.graphics.width -> false
-            else -> Random.nextBoolean()
+    fun update(timeDelta: Float) {
+        // Avoid walls
+        velocity = when {
+            position.x - BODY_RADIUS <= 0 -> vec2(1f, 0f) * SPEED
+            position.x + BODY_RADIUS >= Gdx.graphics.width -> vec2(-1f, 0f) * SPEED
+            position.y - BODY_RADIUS <= 0 -> vec2(0f, 1f) * SPEED
+            position.y + BODY_RADIUS >= Gdx.graphics.height -> vec2(0f, -1f) * SPEED
+            else -> velocity
         }
-        val yPositive = when {
-            position.y - BODY_RADIUS <= 0 -> true
-            position.y + BODY_RADIUS >= Gdx.graphics.height -> false
-            else -> Random.nextBoolean()
+        // Update turning direction
+        val randomTurning = Random.nextInt(25)
+        turningDirection = when (randomTurning) {
+            0 -> -1
+            in 1..2 -> 0
+            4 -> 1
+            else -> turningDirection
         }
-
-        position.x += Random.nextFloat() * 15f * if (xPositive) 1 else -1
-        position.y += Random.nextFloat() * 15f * if (yPositive) 1 else -1
-
-        // Cycle
+        velocity.setAngle(velocity.angle() + TURNING_ANGLE * turningDirection)
+        // Update position
+        position += velocity * timeDelta
+        // Update cycle
         cyclePosition = (cyclePosition + 1) % CYCLE_LENGTH
         isOn = cyclePosition == 0
     }
 
     fun lookAt(fireflies: List<Firefly>) {
-        if (!isOn && fireflies.getNearbyFireflies(this).any { it.isOn }) {
+        if (!isOn && fireflies.filterNearbyFireflies(this).any { it.isOn }) {
             cyclePosition = 0
         }
     }
 
-    private fun List<Firefly>.getNearbyFireflies(firefly: Firefly) = this.filter { otherFirefly ->
-        otherFirefly != firefly && Vector2.dst2(
-                firefly.position.x, firefly.position.y,
-                otherFirefly.position.x, otherFirefly.position.y
-        ) <= PERCEPTION_RADIUS_SQUARED
+    private fun List<Firefly>.filterNearbyFireflies(firefly: Firefly) = this.filter { otherFirefly ->
+        otherFirefly != firefly && firefly.position.dst2(otherFirefly.position) <= PERCEPTION_RADIUS_SQUARED
     }
 
     fun draw(shapeRenderer: ShapeRenderer) {
