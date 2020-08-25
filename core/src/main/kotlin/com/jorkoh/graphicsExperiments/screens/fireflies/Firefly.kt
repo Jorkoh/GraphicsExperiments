@@ -14,15 +14,15 @@ class Firefly(
         var velocity: Vector2
 ) {
     companion object {
-        const val BODY_RADIUS = 7.5f
+        const val BODY_RADIUS = 6f
 
         const val CYCLE_LENGTH = 16
 
         const val SPEED = 40f
-        const val TURNING_ANGLE = 10
+        const val TURNING_ANGLE = 6
 
+        const val PERCEPTION_RADIUS = 80f
         const val PERCEPTION_RADIUS_SQUARED = 6400f
-        val PERCEPTION_COLOR = Color(0x181818ff)
     }
 
     private var turningDirection = 0
@@ -30,7 +30,7 @@ class Firefly(
     private var cyclePosition = Random.nextInt(CYCLE_LENGTH)
     var isOn = cyclePosition == 0
 
-    fun update(timeDelta: Float) {
+    fun updateMovement(timeDelta: Float) {
         // Avoid walls
         velocity = when {
             position.x - BODY_RADIUS <= 0 -> vec2(1f, 0f) * SPEED
@@ -40,7 +40,7 @@ class Firefly(
             else -> velocity
         }
         // Update turning direction
-        val randomTurning = Random.nextInt(25)
+        val randomTurning = Random.nextInt(40)
         turningDirection = when (randomTurning) {
             0 -> -1
             in 1..2 -> 0
@@ -50,12 +50,16 @@ class Firefly(
         velocity.setAngle(velocity.angle() + TURNING_ANGLE * turningDirection)
         // Update position
         position += velocity * timeDelta
+    }
+
+    fun updateCycle() {
         // Update cycle
         cyclePosition = (cyclePosition + 1) % CYCLE_LENGTH
         isOn = cyclePosition == 0
     }
 
-    fun lookAt(fireflies: List<Firefly>) {
+    fun lookAtNearby(fireflies : List<Firefly>){
+        // Adjust according to nearby fireflies
         if (!isOn && fireflies.filterNearbyFireflies(this).any { it.isOn }) {
             cyclePosition = 0
         }
@@ -63,16 +67,6 @@ class Firefly(
 
     private fun List<Firefly>.filterNearbyFireflies(firefly: Firefly) = this.filter { otherFirefly ->
         otherFirefly != firefly && firefly.position.dst2(otherFirefly.position) <= PERCEPTION_RADIUS_SQUARED
-    }
-
-    fun draw(shapeRenderer: ShapeRenderer) {
-        shapeRenderer.color = if (isOn) Color.YELLOW else Color.DARK_GRAY
-        shapeRenderer.circle(position.x, position.y, BODY_RADIUS)
-    }
-
-    fun drawPerception(shapeRenderer: ShapeRenderer) {
-        shapeRenderer.color = PERCEPTION_COLOR
-        shapeRenderer.circle(position.x, position.y, PERCEPTION_RADIUS_SQUARED)
     }
 
     fun randomizeCycle() {

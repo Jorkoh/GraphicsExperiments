@@ -2,6 +2,8 @@ package com.jorkoh.graphicsExperiments.screens.fireflies
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.jorkoh.graphicsExperiments.GraphicsExperiments
 import com.jorkoh.graphicsExperiments.screens.MainMenuScreen
@@ -15,6 +17,9 @@ import kotlin.random.Random
 class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
     companion object {
         const val CHAOS_RADIUS_SQUARED = 6400f
+
+        val LIGHT_IMAGE = Texture("light.png")
+        val PERCEPTION_COLOR = Color(0x181818ff)
     }
 
     private val fireflies = mutableListOf<Firefly>()
@@ -63,20 +68,28 @@ class FirefliesScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     override fun render(delta: Float) {
+        fireflies.forEach { firefly -> firefly.updateMovement(delta) }
+
         accumulator += delta
         if (accumulator >= 0.06f) {
-            // The fireflies don't update on every render cycle
-            fireflies.forEach { firefly -> firefly.update(accumulator) }
-            fireflies.forEach { firefly -> firefly.lookAt(fireflies) }
+            // The fireflies don't update their cycle on every render cycle
+            fireflies.forEach { it.updateCycle() }
+            fireflies.forEach { it.lookAtNearby(fireflies) }
             accumulator -= 0.06f
         }
 
-        main.shapeRenderer.use(ShapeRenderer.ShapeType.Filled) { renderer ->
-            fireflies.filter { it.isOn }.forEach { firefly -> firefly.draw(renderer) }
+        main.batch.use { batch ->
+            fireflies.filter { it.isOn }.forEach { firefly ->
+                batch.draw(LIGHT_IMAGE, firefly.position.x - LIGHT_IMAGE.width / 2f, firefly.position.y - LIGHT_IMAGE.height / 2f)
+            }
         }
         main.shapeRenderer.use(ShapeRenderer.ShapeType.Line) { renderer ->
-            fireflies.filter { !it.isOn }.forEach { firefly -> firefly.draw(renderer) }
-//            fireflies.forEach { firefly -> firefly.drawPerception(renderer) }
+            fireflies.filter { !it.isOn }.forEach { firefly ->
+                renderer.color = Color.DARK_GRAY
+                renderer.circle(firefly.position.x, firefly.position.y, Firefly.BODY_RADIUS)
+//                renderer.color = PERCEPTION_COLOR
+//                renderer.circle(firefly.position.x, firefly.position.y, Firefly.PERCEPTION_RADIUS)
+            }
         }
     }
 
