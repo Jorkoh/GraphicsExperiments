@@ -12,10 +12,13 @@ import com.jorkoh.graphicsExperiments.screens.clearScreen
 import com.jorkoh.graphicsExperiments.screens.screenPosToVec2
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
+import ktx.graphics.arc
 import ktx.graphics.use
+import ktx.math.minus
 import ktx.math.plus
 import ktx.math.times
 import ktx.math.vec2
+import kotlin.math.abs
 import kotlin.random.Random
 
 class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
@@ -50,7 +53,7 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
         }
 
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-            // TODO Use only neighbors with optimization algorithm
+            // TODO Optimize this with region algorithm
             selectedBoid = boids.minBy { boid -> boid.position.dst(screenPosToVec2(screenX, screenY)) }
             return true
         }
@@ -76,7 +79,7 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     private fun addBoids() {
-        repeat(600) {
+        repeat(300) {
             val position = vec2(
                     Random.nextFloat() * (Gdx.graphics.width - SPAWN_MARGIN) + SPAWN_MARGIN / 2f,
                     Random.nextFloat() * (Gdx.graphics.height - SPAWN_MARGIN) + SPAWN_MARGIN / 2f
@@ -88,13 +91,16 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
 
     private fun updateBoids(timeDelta: Float) {
         boids.forEach { boid ->
-            // TODO Pass only neighbors with optimization algorithm
-            boid.calculateVelocityComponents(boids.filter { otherBoid ->
-                otherBoid != boid && otherBoid.position.dst(boid.position) < Boid.PERCEPTION_RADIUS
-            }, timeDelta)
-            boid.calculateVelocity()
+            boid.calculateVelocityComponents(boids.filterNeighbors(boid), timeDelta)
+            boid.calculateVelocity(timeDelta)
             boid.move(timeDelta)
         }
+    }
+
+    // TODO Optimize this with region algorithm
+    private fun List<Boid>.filterNeighbors(boid: Boid) = filter { otherBoid ->
+        otherBoid != boid && otherBoid.position.dst(boid.position) <= Boid.PERCEPTION_RADIUS
+                && abs(boid.velocity.angle(otherBoid.position - boid.position)) <= Boid.PERCEPTION_CONE_DEGREES / 2f
     }
 
     private fun renderBoids() {
@@ -106,11 +112,10 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
                 if (boid == selectedBoid) {
                     // Debug stuff
                     renderer.color = Color.LIGHT_GRAY
-                    renderer.circle(boid.position.x, boid.position.y, Boid.PERCEPTION_RADIUS)
+                    renderer.arc(boid.position, Boid.PERCEPTION_RADIUS, boid.velocity.angle() - Boid.PERCEPTION_CONE_DEGREES / 2f, Boid.PERCEPTION_CONE_DEGREES)
 
                     renderer.color = Color.GREEN
                     renderer.line(boid.position, boid.position + boid.velocity)
-                    println("Speed: " + boid.velocity.len())
 
                     boid.velocityComponents.forEachIndexed { index, component ->
                         renderer.color = when (index) {

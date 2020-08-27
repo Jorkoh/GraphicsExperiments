@@ -17,9 +17,9 @@ fun printFPS(delta: Float) {
     println("FPS: ${1 / delta}")
 }
 
-fun screenPosToVec2(screenX : Int, screenY : Int) = vec2(screenX.toFloat(), (Gdx.graphics.height - screenY).toFloat())
+fun screenPosToVec2(screenX: Int, screenY: Int) = vec2(screenX.toFloat(), (Gdx.graphics.height - screenY).toFloat())
 
-fun ShapeRenderer.strokeArc(position : Vector2, radius: Float, start: Float, degrees: Float) {
+fun ShapeRenderer.strokeArc(position: Vector2, radius: Float, start: Float, degrees: Float) {
     val segments = (6 * Math.cbrt(radius.toDouble()).toFloat() * (degrees / 360.0f)).toInt()
 
     require(segments > 0) { "segments must be > 0." }
@@ -39,4 +39,9 @@ fun ShapeRenderer.strokeArc(position : Vector2, radius: Float, start: Float, deg
         renderer.color(colorBits)
         renderer.vertex(position.x + cx, position.y + cy, 0f)
     }
+}
+
+// https://math.stackexchange.com/a/1649850
+fun angleDifference(firstAngle: Float, secondAngle: Float): Float {
+    return (firstAngle - secondAngle + 540) % 360 - 180
 }
