@@ -1,6 +1,7 @@
 package com.jorkoh.graphicsExperiments.screens
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.MathUtils
@@ -8,8 +9,8 @@ import com.badlogic.gdx.math.Vector2
 import ktx.math.vec2
 
 
-fun clearScreen(red: Float = 0f, green: Float = 0f, blue: Float = 0f) {
-    Gdx.gl.glClearColor(red, green, blue, 1f)
+fun clearScreen(color: Color = Color.BLACK) {
+    Gdx.gl.glClearColor(color.r, color.g, color.b, color.a)
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT or GL20.GL_DEPTH_BUFFER_BIT)
 }
 

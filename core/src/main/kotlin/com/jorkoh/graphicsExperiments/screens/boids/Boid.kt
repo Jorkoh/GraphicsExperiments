@@ -60,6 +60,7 @@ class Boid(
             velocityComponents.add(alignment.nor() * timeDelta * ALIGNMENT_FACTOR)
 
             // Cohesion rule
+            // TODO go over this cohesion rule
             val cohesion = vec2()
             neighbors.forEach { otherBoid ->
                 cohesion += otherBoid.position

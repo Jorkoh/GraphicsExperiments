@@ -8,13 +8,9 @@ import com.jorkoh.graphicsExperiments.GraphicsExperiments
 object Lwjgl3Launcher {
     @JvmStatic
     fun main(args: Array<String>) {
-        createApplication()
-    }
-
-    private fun createApplication(): Lwjgl3Application {
-        return Lwjgl3Application(GraphicsExperiments(), Lwjgl3ApplicationConfiguration().apply {
+        Lwjgl3Application(GraphicsExperiments(), Lwjgl3ApplicationConfiguration().apply {
             setTitle("GraphicsExperiments")
-            setWindowedMode(1280, 720)
+            setWindowedMode(1600, 900)
             setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png")
         })
     }

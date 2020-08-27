@@ -3,30 +3,32 @@ package com.jorkoh.graphicsExperiments.screens.boids
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Polygon
 import com.badlogic.gdx.math.Vector2
 import com.jorkoh.graphicsExperiments.GraphicsExperiments
 import com.jorkoh.graphicsExperiments.screens.SelectionScreen
 import com.jorkoh.graphicsExperiments.screens.clearScreen
-import com.jorkoh.graphicsExperiments.screens.screenPosToVec2
 import ktx.app.KtxInputAdapter
 import ktx.app.KtxScreen
 import ktx.graphics.arc
 import ktx.graphics.use
-import ktx.math.minus
-import ktx.math.plus
-import ktx.math.times
-import ktx.math.vec2
+import ktx.math.*
 import kotlin.math.abs
 import kotlin.random.Random
 
 class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
 
     companion object {
-        const val SPAWN_MARGIN = 100
-        const val POLY_SCALE = 6f
+        const val DEFAULT_ZOOM = 1.4f
+        const val MIN_ZOOM = 0.3f
+        const val MAX_ZOOM = 2f
+        val WATER_COLOR = Color(0.3686f, 0.5725f, 0.8f, 1f)
 
+        const val SPAWN_MARGIN = 100
+
+        const val POLY_SCALE = 6f
         val fishPolyVertex = mutableListOf(
                 -1.4f, 0f,
                 -0.8f, 0f,
@@ -38,7 +40,15 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
         val fishPoly = Polygon()
     }
 
+    private val camera = OrthographicCamera().apply {
+        setToOrtho(false, 1600f, 900f)
+        zoom = DEFAULT_ZOOM
+        update()
+    }
     private val inputProcessor = object : KtxInputAdapter {
+        var middleMouse = false
+        var previousDragPosition = vec3()
+
         override fun keyDown(keycode: Int): Boolean {
             return when (keycode) {
                 Input.Keys.ESCAPE -> {
@@ -53,8 +63,55 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
         }
 
         override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-            // TODO Optimize this with region algorithm
-            selectedBoid = boids.minBy { boid -> boid.position.dst(screenPosToVec2(screenX, screenY)) }
+            return when (button) {
+                Input.Buttons.LEFT -> {
+                    // TODO Optimize this with region algorithm
+                    val unprojectedPosition = camera.unproject(vec3(screenX.toFloat(), screenY.toFloat()))
+                    selectedBoid = boids.minBy { boid -> boid.position.dst(unprojectedPosition.x, unprojectedPosition.y) }
+                    true
+                }
+                Input.Buttons.MIDDLE -> {
+                    middleMouse = true
+                    previousDragPosition = vec3(screenX.toFloat(), screenY.toFloat(), 0f)
+                    true
+                }
+                Input.Buttons.RIGHT -> {
+                    selectedBoid = null
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
+            return when (button) {
+                Input.Buttons.MIDDLE -> {
+                    middleMouse = false
+                    true
+                }
+                else -> false
+            }
+        }
+
+        override fun touchDragged(screenX: Int, screenY: Int, pointer: Int): Boolean {
+            return if (middleMouse) {
+                val newDragPosition = vec3(screenX.toFloat(), screenY.toFloat(), 0f)
+                camera.unproject(previousDragPosition)
+                camera.translate(previousDragPosition - camera.unproject(newDragPosition.cpy()))
+                camera.update()
+                previousDragPosition = newDragPosition
+                true
+            } else {
+                false
+            }
+        }
+
+        override fun scrolled(amount: Int): Boolean {
+            val newZoom = camera.zoom + amount / 10f
+            if (newZoom in MIN_ZOOM..MAX_ZOOM) {
+                camera.zoom = newZoom
+                camera.update()
+            }
             return true
         }
     }
@@ -67,7 +124,11 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     override fun render(delta: Float) {
-        clearScreen(0.3686f, 0.5725f, 0.8f)
+        clearScreen()
+        main.shapeRenderer.use(ShapeRenderer.ShapeType.Filled) { renderer ->
+            renderer.color = WATER_COLOR
+            renderer.rect(0f, 0f, 1600f, 900f)
+        }
 
         updateBoids(delta)
         renderBoids()
@@ -104,6 +165,8 @@ class BoidsScreen(private val main: GraphicsExperiments) : KtxScreen {
     }
 
     private fun renderBoids() {
+        main.shapeRenderer.projectionMatrix = camera.combined
+
         main.shapeRenderer.use(ShapeRenderer.ShapeType.Line) { renderer ->
             boids.forEach { boid ->
                 renderer.color = Color.BLUE
