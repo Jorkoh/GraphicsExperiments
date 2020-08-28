@@ -1,44 +1,46 @@
 package com.jorkoh.graphicsExperiments.screens.boids
 
-import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.math.Vector2
-import com.jorkoh.graphicsExperiments.screens.angleDifference
 import ktx.math.*
 import kotlin.math.max
 
 class Boid(
-        var position: Vector2,
+        override var position: Vector2,
         var velocity: Vector2,
         var velocityComponents: MutableList<Vector2> = mutableListOf()
-) {
+) : Agent {
 
     companion object {
         const val PERCEPTION_RADIUS = 60f
-        const val PERCEPTION_CONE_DEGREES = 260f
+        // TODO the fact that they can't sense the predator when it's right behind is not very
+        //  realistic in the case of fish... maybe it should have different perception cones for
+        //  different interactions
+        const val PERCEPTION_CONE_DEGREES = 360f
 
         const val INITIAL_SPEED = 60f
         const val MINIMUM_SPEED = 40f
-        const val MAXIMUM_SPEED = 100f
+        const val MAXIMUM_SPEED = 120f
 
-        const val MAX_TURN_RATE_ANGLE = 280f
+        const val MAX_TURN_RATE_ANGLE = 320f
 
         const val WALL_AVOIDANCE_FACTOR = 2e5f
         const val SEPARATION_FACTOR = 1.8e4f
-        const val ALIGNMENT_FACTOR = 80f
+        const val ALIGNMENT_FACTOR = 200f
         const val COHESION_FACTOR = 4f
+        const val FLEE_FACTOR = 8e10f
     }
 
-    fun calculateVelocityComponents(neighbors: List<Boid>, timeDelta: Float) {
+    fun interactWithEnvironment(neighbors: List<Boid>, predators: List<Predator>, timeDelta: Float) {
         velocityComponents.clear()
 
         // Avoid walls
         val dstToLeft = max(position.x, 0.000001f)
         velocityComponents.add(vec2(1f, 0f) * (1 / (dstToLeft * dstToLeft)) * timeDelta * WALL_AVOIDANCE_FACTOR)
-        val dstToRight = max(Gdx.graphics.width - position.x, 0.000001f)
+        val dstToRight = max(BoidsScreen.AREA_WIDTH - position.x, 0.000001f)
         velocityComponents.add(vec2(-1f, 0f) * (1 / (dstToRight * dstToRight)) * timeDelta * WALL_AVOIDANCE_FACTOR)
         val dstToBottom = max(position.y, 0.000001f)
         velocityComponents.add(vec2(0f, 1f) * (1 / (dstToBottom * dstToBottom)) * timeDelta * WALL_AVOIDANCE_FACTOR)
-        val dstToTop = max(Gdx.graphics.height - position.y, 0.000001f)
+        val dstToTop = max(BoidsScreen.AREA_HEIGHT - position.y, 0.000001f)
         velocityComponents.add(vec2(0f, -1f) * (1 / (dstToTop * dstToTop)) * timeDelta * WALL_AVOIDANCE_FACTOR)
 
         // Flock rules
@@ -60,12 +62,22 @@ class Boid(
             velocityComponents.add(alignment.nor() * timeDelta * ALIGNMENT_FACTOR)
 
             // Cohesion rule
-            // TODO go over this cohesion rule
             val cohesion = vec2()
             neighbors.forEach { otherBoid ->
                 cohesion += otherBoid.position
             }
             velocityComponents.add((cohesion / neighbors.size - position) * timeDelta * COHESION_FACTOR)
+        }
+
+        // Avoid predator
+        if (predators.isNotEmpty()){
+            val flee = vec2()
+            predators.forEach { predator ->
+                val positionDifference = position - predator.position
+                val positionDistance = positionDifference.len()
+                flee += positionDifference.nor() * (1 / (positionDistance * positionDistance))
+            }
+            velocityComponents.add(flee * timeDelta * FLEE_FACTOR)
         }
     }
 
@@ -77,19 +89,6 @@ class Boid(
             newVelocity.clampTurnRate(velocity, MAX_TURN_RATE_ANGLE, timeDelta)
             // Clamp the speed
             newVelocity.clamp(MINIMUM_SPEED, MAXIMUM_SPEED)
-        }
-    }
-
-    private fun Vector2.clampTurnRate(previousVector: Vector2, maxTurnRate: Float, timeDelta: Float) {
-        val previousVectorAngle = previousVector.angle()
-        val turnRate = angleDifference(angle(), previousVectorAngle) / timeDelta
-        when {
-            turnRate > maxTurnRate -> {
-                setAngle(previousVectorAngle + maxTurnRate * timeDelta)
-            }
-            turnRate < -maxTurnRate -> {
-                setAngle(previousVectorAngle - maxTurnRate * timeDelta)
-            }
         }
     }
 

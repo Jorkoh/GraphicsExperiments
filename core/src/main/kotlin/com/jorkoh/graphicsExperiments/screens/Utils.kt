@@ -41,8 +41,3 @@ fun ShapeRenderer.strokeArc(position: Vector2, radius: Float, start: Float, degr
         renderer.vertex(position.x + cx, position.y + cy, 0f)
     }
 }
-
-// https://math.stackexchange.com/a/1649850
-fun angleDifference(firstAngle: Float, secondAngle: Float): Float {
-    return (firstAngle - secondAngle + 540) % 360 - 180
-}
